@@ -1,109 +1,110 @@
-import AppError from '@shared/erros/AppErros';
+import AppError from '@shared/errors/AppError';
 
-import FakeNotificationRepository from '@modules/notifications/repositories/fakes/FakeNotificationsRepository';
-import FakeCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeCacheProvider';
-import FakeAppointmentsRepository from '../repositories/fakes/FakeAppointmentsRepository';
-import CreateAppointmentService from './CreateAppoinmentServices';
+import FakeNotificationsRepository from '@modules/notifications/repositories/fakes/FakeNotificationsRepository';
+import FakeAppointmentsRepository from '@modules/appointments/repositories/fakes/FakeAppointmentsRepository';
+import FakeRedisCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeRedisCacheProvider';
+import CreateAppointmentService from './CreateAppointmentService';
 
-let fakeAppointment: FakeAppointmentsRepository;
-let createAppointService: CreateAppointmentService;
-let fakeNotificationRepository: FakeNotificationRepository;
-let fakeCacheProvider: FakeCacheProvider;
+let fakeAppointmentsRepository: FakeAppointmentsRepository;
+let fakeNotificationsRepository: FakeNotificationsRepository;
+let fakeRedisCacheProvider: FakeRedisCacheProvider;
+let createAppointment: CreateAppointmentService;
 
 describe('CreateAppointment', () => {
   beforeEach(() => {
-    fakeAppointment = new FakeAppointmentsRepository();
-    fakeNotificationRepository = new FakeNotificationRepository();
-    fakeCacheProvider = new FakeCacheProvider();
+    fakeAppointmentsRepository = new FakeAppointmentsRepository();
+    fakeNotificationsRepository = new FakeNotificationsRepository();
+    fakeRedisCacheProvider = new FakeRedisCacheProvider();
 
-    createAppointService = new CreateAppointmentService(
-      fakeAppointment,
-      fakeNotificationRepository,
-      fakeCacheProvider,
+    createAppointment = new CreateAppointmentService(
+      fakeAppointmentsRepository,
+      fakeNotificationsRepository,
+      fakeRedisCacheProvider,
     );
   });
 
   it('should be able to create a new appointment', async () => {
-    jest.spyOn(Date, 'now').mockImplementation(() => {
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
       return new Date(2020, 4, 10, 12).getTime();
     });
 
-    const appointment = await createAppointService.exec({
+    const appointment = await createAppointment.execute({
       date: new Date(2020, 4, 10, 13),
-      user_id: 'user_id',
-      provider_id: 'provider_id',
+      user_id: 'user-id',
+      provider_id: 'provider-id',
     });
 
     expect(appointment).toHaveProperty('id');
-    expect(appointment.provider_id).toBe('provider_id');
+    expect(appointment.provider_id).toBe('provider-id');
   });
 
-  it('should not be able to create two appointment on the same time', async () => {
-    jest.spyOn(Date, 'now').mockImplementation(() => {
+  it('should not be able to create two appointments on the same time', async () => {
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
       return new Date(2020, 4, 10, 12).getTime();
     });
+    const appointmentDate = new Date(2020, 4, 10, 13);
 
-    await createAppointService.exec({
-      date: new Date(2020, 4, 10, 13),
-      user_id: 'user_id',
-      provider_id: 'provider_id',
+    await createAppointment.execute({
+      date: appointmentDate,
+      user_id: 'user-id',
+      provider_id: 'provider-id',
     });
 
     await expect(
-      createAppointService.exec({
-        date: new Date(2020, 4, 10, 13),
-        user_id: 'user_id',
-        provider_id: 'provider_id',
+      createAppointment.execute({
+        date: appointmentDate,
+        user_id: 'user-id',
+        provider_id: 'provider-id',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it('should not be able to create appointment on a past date', async () => {
-    jest.spyOn(Date, 'now').mockImplementation(() => {
+  it('should not be able to create an appointmentson a past date', async () => {
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
       return new Date(2020, 4, 10, 12).getTime();
     });
 
     await expect(
-      createAppointService.exec({
+      createAppointment.execute({
         date: new Date(2020, 4, 10, 11),
-        user_id: 'user_id',
-        provider_id: 'provider_id',
+        user_id: 'user-id',
+        provider_id: 'provider-id',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it('should not be able to create appointment with same user as provider', async () => {
-    jest.spyOn(Date, 'now').mockImplementation(() => {
+  it('should not be able to create an appointment before 8am and after 5pm', async () => {
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
       return new Date(2020, 4, 10, 12).getTime();
     });
 
     await expect(
-      createAppointService.exec({
+      createAppointment.execute({
         date: new Date(2020, 4, 10, 13),
-        user_id: 'user_id',
-        provider_id: 'user_id',
+        user_id: 'user-id',
+        provider_id: 'user-id',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it('should not be able to create appointment before 8am an after 5pm', async () => {
-    jest.spyOn(Date, 'now').mockImplementation(() => {
+  it('should not be able to create an appointment ', async () => {
+    jest.spyOn(Date, 'now').mockImplementationOnce(() => {
       return new Date(2020, 4, 10, 12).getTime();
     });
 
     await expect(
-      createAppointService.exec({
+      createAppointment.execute({
         date: new Date(2020, 4, 11, 7),
-        user_id: 'user_id',
-        provider_id: 'provider_id',
+        user_id: 'user-id',
+        provider_id: 'provider-id',
       }),
     ).rejects.toBeInstanceOf(AppError);
 
     await expect(
-      createAppointService.exec({
+      createAppointment.execute({
         date: new Date(2020, 4, 11, 18),
-        user_id: 'user_id',
-        provider_id: 'provider_id',
+        user_id: 'user-id',
+        provider_id: 'provider-id',
       }),
     ).rejects.toBeInstanceOf(AppError);
   });

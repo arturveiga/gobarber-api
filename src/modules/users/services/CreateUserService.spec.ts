@@ -1,47 +1,49 @@
-import AppError from '@shared/erros/AppErros';
-import FakeCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeCacheProvider';
-import FakeUsersRepository from '../repositories/fakes/FakeUsersRepository';
-import CreateUserServices from './CreateUserService';
-import FakeHashProvider from '../providers/hashProvider/fakes/FakeHashProvider';
+import AppError from '@shared/errors/AppError';
 
-let fakeUser: FakeUsersRepository;
+import FakeRedisCacheProvider from '@shared/container/providers/CacheProvider/fakes/FakeRedisCacheProvider';
+import FakeUsersRepository from '@modules/users/repositories/fakes/FakeUsersRepository';
+import FakeHashProvider from '@modules/users/providers/HashProvider/fakes/FakeHashProvider';
+import CreateUserService from './CreateUserService';
+
+let fakeUsersRepository: FakeUsersRepository;
 let fakeHashProvider: FakeHashProvider;
-let createUserService: CreateUserServices;
-let fakeCacheProvider: FakeCacheProvider;
+let fakeRedisCacheProvider: FakeRedisCacheProvider;
+let createUser: CreateUserService;
 
 describe('CreateUser', () => {
   beforeEach(() => {
-    fakeUser = new FakeUsersRepository();
+    fakeUsersRepository = new FakeUsersRepository();
     fakeHashProvider = new FakeHashProvider();
-    fakeCacheProvider = new FakeCacheProvider();
-    createUserService = new CreateUserServices(
-      fakeUser,
+    fakeRedisCacheProvider = new FakeRedisCacheProvider();
+
+    createUser = new CreateUserService(
+      fakeUsersRepository,
       fakeHashProvider,
-      fakeCacheProvider,
+      fakeRedisCacheProvider,
     );
   });
 
   it('should be able to create a new User', async () => {
-    const user = await createUserService.exec({
+    const user = await createUser.execute({
       name: 'John Doe',
-      email: 'johndoe@example.com',
+      email: 'jhondoe@email.com',
       password: '123456',
     });
 
     expect(user).toHaveProperty('id');
   });
 
-  it('should not be able to create two users with same email', async () => {
-    await createUserService.exec({
+  it('should be able to create a new User with same email from another', async () => {
+    await createUser.execute({
       name: 'John Doe',
-      email: 'johndoe@example.com',
+      email: 'jhondoe@email.com',
       password: '123456',
     });
 
     await expect(
-      createUserService.exec({
+      createUser.execute({
         name: 'John Doe',
-        email: 'johndoe@example.com',
+        email: 'jhondoe@email.com',
         password: '123456',
       }),
     ).rejects.toBeInstanceOf(AppError);

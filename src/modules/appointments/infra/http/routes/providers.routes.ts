@@ -1,29 +1,21 @@
 import { Router } from 'express';
+import { celebrate, Segments, Joi } from 'celebrate';
 
-import ensureAutheticated from '@modules/users/infra/http/middleware/ensureAuthenticated';
-import { Segments, Joi, celebrate } from 'celebrate';
-import ProviderController from '../controllers/ProvidersController';
-import ProviderMonthAvailabilityController from '../controllers/ProviderMonthAvailabilityController';
-import ProviderDayAvailabilityController from '../controllers/ProviderDayAvailabilityController';
+import ensureAuthenticated from '@modules/users/infra/http/middlewares/ensureAuthenticated';
 
-const providerRouter = Router();
+import ProvidersController from '@modules/appointments/infra/http/controllers/ProvidersController';
+import ProviderDayAvailabilityController from '@modules/appointments/infra/http/controllers/ProviderDayAvailabilityController';
+import ProviderMonthAvailabilityController from '@modules/appointments/infra/http/controllers/ProviderMonthAvailabilityController';
 
-providerRouter.use(ensureAutheticated);
-const providerController = new ProviderController();
-const providerMonthAvailabilityController = new ProviderMonthAvailabilityController();
+const providersRouter = Router();
+const providersController = new ProvidersController();
 const providerDayAvailabilityController = new ProviderDayAvailabilityController();
+const providerMonthAvailabilityController = new ProviderMonthAvailabilityController();
 
-providerRouter.get('/', providerController.index);
-providerRouter.get(
-  '/:provider_id/month-availability',
-  celebrate({
-    [Segments.PARAMS]: {
-      provider_id: Joi.string().uuid().required(),
-    },
-  }),
-  providerMonthAvailabilityController.index,
-);
-providerRouter.get(
+providersRouter.use(ensureAuthenticated);
+
+providersRouter.get('/', providersController.index);
+providersRouter.get(
   '/:provider_id/day-availability',
   celebrate({
     [Segments.PARAMS]: {
@@ -32,5 +24,14 @@ providerRouter.get(
   }),
   providerDayAvailabilityController.index,
 );
+providersRouter.get(
+  '/:provider_id/month-availability',
+  celebrate({
+    [Segments.PARAMS]: {
+      provider_id: Joi.string().uuid().required(),
+    },
+  }),
+  providerMonthAvailabilityController.index,
+);
 
-export default providerRouter;
+export default providersRouter;

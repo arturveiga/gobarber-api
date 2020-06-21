@@ -1,10 +1,12 @@
 .idea/
 .vscode/
-node_modules/
+node_modules
 build/
-tmp/
+temp/
+.env
+coverage
+
 tmp/*
 !tmp/.gitkeep
-.env
-ormconfig.json
-coverage
+
+

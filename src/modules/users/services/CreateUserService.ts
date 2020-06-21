@@ -1,44 +1,47 @@
-import AppError from '@shared/erros/AppErros';
 import { injectable, inject } from 'tsyringe';
-import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
-import User from '../infra/typeorm/entities/User';
-import IUserRepository from '../repositories/IUserRepository';
-import IHashProvider from '../providers/hashProvider/models/IHashProvider';
 
-interface IRequestDto {
+import User from '@modules/users/infra/typeorm/entities/User';
+import IUserRepository from '@modules/users/repositories/IUsersRepository';
+import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
+import IHashProvider from '@modules/users/providers/HashProvider/models/IHashProvider';
+
+import AppError from '@shared/errors/AppError';
+
+interface IRequest {
   name: string;
   email: string;
   password: string;
 }
+
 @injectable()
 class CreateUserService {
   constructor(
     @inject('UsersRepository')
-    private userRepository: IUserRepository,
+    private usersRepository: IUserRepository,
 
     @inject('HashProvider')
     private hashProvider: IHashProvider,
 
     @inject('CacheProvider')
     private cacheProvider: ICacheProvider,
-  ) { }
+  ) {}
 
-  public async exec({ name, email, password }: IRequestDto): Promise<User> {
-    const checkUserExists = await this.userRepository.findByEmail(email);
+  public async execute({ name, email, password }: IRequest): Promise<User> {
+    const checkUserExists = await this.usersRepository.findByEmail(email);
 
     if (checkUserExists) {
-      throw new AppError('email addressed already used');
+      throw new AppError('Email address already used.');
     }
 
     const hashedPassword = await this.hashProvider.generateHash(password);
 
-    const user = await this.userRepository.create({
+    const user = await this.usersRepository.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    await this.cacheProvider.invalidadePrefix('provider-list');
+    await this.cacheProvider.invalidatePrefix('providers-list');
 
     return user;
   }

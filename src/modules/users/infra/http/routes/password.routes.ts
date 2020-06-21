@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { Segments, Joi, celebrate } from 'celebrate';
-import ForgotPasswordController from '../controllers/ForgotPasswordController';
-import ResetPasswordController from '../controllers/ResetPasswordController';
+import { celebrate, Segments, Joi } from 'celebrate';
+
+import ForgotPasswordController from '@modules/users/infra/http/controllers/ForgotPasswordController';
+import ResetPasswordController from '@modules/users/infra/http/controllers/ResetPasswordController';
 
 const passwordRouter = Router();
 const forgotPasswordController = new ForgotPasswordController();
-const resetPassworController = new ResetPasswordController();
+const resetPasswordController = new ResetPasswordController();
 
 passwordRouter.post(
   '/forgot',
@@ -16,16 +17,17 @@ passwordRouter.post(
   }),
   forgotPasswordController.create,
 );
+
 passwordRouter.post(
   '/reset',
   celebrate({
     [Segments.BODY]: {
-      token: Joi.string().email().required(),
+      token: Joi.string().uuid().required(),
       password: Joi.string().required(),
       password_confirmation: Joi.string().required().valid(Joi.ref('password')),
     },
   }),
-  resetPassworController.create,
+  resetPasswordController.create,
 );
 
 export default passwordRouter;

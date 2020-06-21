@@ -1,4 +1,4 @@
-export default interface IFindAllInMonthFromProvider {
+export default interface IFindAllInMonthFromProviderDTO {
   provider_id: string;
   month: number;
   year: number;

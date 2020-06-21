@@ -4,15 +4,16 @@ import multer, { StorageEngine } from 'multer';
 
 const tmpFolder = path.resolve(__dirname, '..', '..', 'tmp');
 
-console.log(process.env.STORAGE_DRIVER);
-
 interface IUploadConfig {
   driver: 's3' | 'disk';
+
   tmpFolder: string;
   uploadsFolder: string;
+
   multer: {
     storage: StorageEngine;
   };
+
   config: {
     disk: {};
     aws: {
@@ -22,9 +23,11 @@ interface IUploadConfig {
 }
 
 export default {
-  driver: process.env.STORAGE_DRIVER,
+  driver: process.env.STOREGE_DRIVE,
+
   tmpFolder,
   uploadsFolder: path.resolve(tmpFolder, 'uploads'),
+
   multer: {
     storage: multer.diskStorage({
       destination: tmpFolder,
@@ -36,10 +39,11 @@ export default {
       },
     }),
   },
+
   config: {
     disk: {},
     aws: {
-      bucket: 'app-gobarber-2',
+      bucket: 'app-gobarber',
     },
   },
 } as IUploadConfig;
